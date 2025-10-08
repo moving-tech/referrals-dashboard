@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -402,17 +402,17 @@
     <div class="container">
         <div class="header">
             <img src="https://i.imgur.com/NA0efXT.png" alt="Just Move Vancouver" class="logo">
-            <h1>Your Referral Dashboard</h1>
+            <h1>🚚 Your Referral Dashboard</h1>
             <p>Keep moving forward with every referral!</p>
         </div>
 
-        <div id="loading" class="loading" style="display: none;">
+        <div id="loading" class="loading">
             Loading your dashboard...
         </div>
 
         <div id="error" class="error" style="display: none;"></div>
 
-        <div id="dashboard" class="dashboard">
+        <div id="dashboard" class="dashboard" style="display: none;">
             <button class="share-button" onclick="showShareModal()">
                 📤 Share Your Referral Link
             </button>
@@ -508,34 +508,13 @@
     </div>
 
     <script>
-        // Configuration - REPLACE WITH YOUR N8N WEBHOOK URL WHEN READY
-        const N8N_WEBHOOK_URL = 'YOUR_N8N_WEBHOOK_URL_HERE';
-        const DEMO_MODE = true; // Set to false when connecting to n8n
+        // Configuration
+        const N8N_WEBHOOK_URL = 'https://n8n-movers-project-n8n.5gwahg.easypanel.host/webhook/d4098018-47d2-4018-b20f-aa61116d22f2';
+        const DEMO_MODE = false;
         
         let userData = null;
         let referralsChart = null;
         let earningsChart = null;
-
-        // Demo data for design preview
-        const DEMO_DATA = {
-            lastMonthPayout: 325.00,
-            totalPayouts: 2150.00,
-            totalPending: 125.50,
-            referralsThisMonth: 7,
-            totalReferrals: 28,
-            monthlyGoal: 10,
-            goalSetMonth: "2025-10",
-            referralUrl: "https://justmovevancouver.com/ref/DEMO123",
-            qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://justmovevancouver.com/ref/DEMO123",
-            referralsByMonth: [
-                { month: 'May', count: 3 },
-                { month: 'Jun', count: 5 },
-                { month: 'Jul', count: 6 },
-                { month: 'Aug', count: 4 },
-                { month: 'Sep', count: 3 },
-                { month: 'Oct', count: 7 }
-            ]
-        };
 
         // Format currency
         function formatCurrency(amount) {
@@ -554,14 +533,8 @@
             return urlParams.get('id');
         }
 
-        // Load user data from n8n or use demo data
+        // Load user data from n8n
         async function loadData() {
-            if (DEMO_MODE) {
-                userData = DEMO_DATA;
-                renderDashboard();
-                return;
-            }
-
             const token = getToken();
             
             if (!token) {
@@ -571,8 +544,10 @@
                 return;
             }
 
+            document.getElementById('loading').style.display = 'block';
+
             try {
-                const response = await fetch(`${N8N_WEBHOOK_URL}?token=${token}`);
+                const response = await fetch(`${N8N_WEBHOOK_URL}?id=${token}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to load data');
@@ -608,14 +583,12 @@
             createReferralsChart();
             createEarningsChart();
 
-            // Check if goal needs to be set for current month (skip in demo mode)
-            if (!DEMO_MODE) {
-                const currentMonth = getCurrentMonth();
-                if (!userData.goalSetMonth || userData.goalSetMonth !== currentMonth) {
-                    setTimeout(() => {
-                        document.getElementById('goalPromptModal').classList.add('active');
-                    }, 1000);
-                }
+            // Check if goal needs to be set for current month
+            const currentMonth = getCurrentMonth();
+            if (!userData.goalSetMonth || userData.goalSetMonth !== currentMonth) {
+                setTimeout(() => {
+                    document.getElementById('goalPromptModal').classList.add('active');
+                }, 1000);
             }
         }
 
@@ -647,7 +620,7 @@
         function createReferralsChart() {
             const ctx = document.getElementById('referralsChart').getContext('2d');
             
-            const data = userData.referralsByMonth || DEMO_DATA.referralsByMonth;
+            const data = userData.referralsByMonth || [];
             
             referralsChart = new Chart(ctx, {
                 type: 'line',
@@ -773,15 +746,8 @@
             document.getElementById('goalPromptModal').classList.remove('active');
         }
 
-        // Update goal via n8n or locally in demo mode
+        // Update goal via n8n
         async function updateGoal(goal) {
-            if (DEMO_MODE) {
-                userData.monthlyGoal = goal;
-                userData.goalSetMonth = getCurrentMonth();
-                updateGoalProgress();
-                return;
-            }
-
             const token = getToken();
             
             try {
