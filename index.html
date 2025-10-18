@@ -527,10 +527,10 @@
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        // Get token from URL
+        // Get ref from URL
         function getToken() {
             const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
+            return urlParams.get('ref');
         }
 
         // Load user data from n8n
@@ -547,7 +547,7 @@
             document.getElementById('loading').style.display = 'block';
 
             try {
-                const response = await fetch(`${N8N_WEBHOOK_URL}?id=${token}`);
+                const response = await fetch(`${N8N_WEBHOOK_URL}?ref=${token}`);
                 
                 if (!response.ok) {
                     throw new Error('Failed to load data');
@@ -757,7 +757,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        token: token,
+                        ref: token,
                         monthlyGoal: goal,
                         goalSetMonth: getCurrentMonth()
                     })
